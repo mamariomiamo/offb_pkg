@@ -1,0 +1,3 @@
+[submodule "offboard_controller_lib"]
+	path = offboard_controller_lib
+	url = git@github.com:mamariomiamo/offboard_controller_lib.git
