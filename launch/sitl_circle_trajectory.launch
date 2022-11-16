@@ -29,7 +29,7 @@
         <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
 	    <arg name="xid" value="drone0"/>
         <arg name="x" value="0"/>
-        <arg name="y" value="10"/>
+        <arg name="y" value="0"/>
         <arg name="z" value="0"/>
 
         <!-- PX4 SITL and vehicle spawn -->
@@ -63,6 +63,7 @@
             <param name="user_give_goal" value="false"/>
             <param name="uav_id" value="$(arg xid)"/>
             <param name="use_px4Ctrl" value="false"/>
+            <param name="send_attitude_target" value="false"/>
     
         </node>
 

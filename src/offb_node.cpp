@@ -16,6 +16,7 @@ OffbNode::OffbNode(ros::NodeHandle &nodeHandle) : _nh(nodeHandle)
   _nh.param("missionPeriod", _missionPeriod, 0.2);
   _nh.param("user_give_goal", user_give_goal_, true);
   _nh.param("use_px4Ctrl", use_px4Ctrl, true);
+  _nh.param("send_attitude_target", send_attitude_target_, false);
   _nh.param<std::string>("uav_id", uav_id_, "");
 
   /** @brief Control gains**/
@@ -237,22 +238,68 @@ void OffbNode::missionTimer(const ros::TimerEvent &)
           Eigen::Vector3d vel_error = uav_local_vel_enu - v_ref_enu;
 
           Eigen::Vector3d a_des = pos_ctrl->calDesiredAcceleration(pos_error, vel_error, a_ref_enu);
-          q_des = pos_ctrl->calDesiredAttitude(a_des, yaw_ref);
-          cmdBodyRate_(3) = pos_ctrl->calDesiredThrottle(a_des, uav_attitude_q, battery_volt, voltage_compensation_);
+          a_des = a_des + Eigen::Vector3d{0.0, 0.0, -9.81};
 
-          mavros_msgs::AttitudeTarget msg;
-          msg.header.stamp = ros::Time::now();
-          msg.header.frame_id = uav_id_ + "_body";
-          msg.body_rate.x = cmdBodyRate_(0);
-          msg.body_rate.y = cmdBodyRate_(1);
-          msg.body_rate.z = cmdBodyRate_(2);
-          msg.type_mask = 7; // Ignore orientation messages (128); Ignore body rate messages (7)
-          msg.orientation.w = q_des(0);
-          msg.orientation.x = q_des(1);
-          msg.orientation.y = q_des(2);
-          msg.orientation.z = q_des(3);
-          msg.thrust = cmdBodyRate_(3);
-          _att_rate_pub.publish(msg);
+          if (send_attitude_target_)
+          {
+            q_des = pos_ctrl->calDesiredAttitude(a_des, yaw_ref);
+            cmdBodyRate_(3) = pos_ctrl->calDesiredThrottle(a_des, uav_attitude_q, battery_volt, voltage_compensation_);
+
+            mavros_msgs::AttitudeTarget msg;
+            msg.header.stamp = ros::Time::now();
+            msg.header.frame_id = uav_id_ + "_body";
+            msg.body_rate.x = cmdBodyRate_(0);
+            msg.body_rate.y = cmdBodyRate_(1);
+            msg.body_rate.z = cmdBodyRate_(2);
+            msg.type_mask = 7; // Ignore orientation messages (128); Ignore body rate messages (7)
+                               // reference: https://mavlink.io/en/messages/common.html#POSITION_TARGET_TYPEMASK
+            msg.orientation.w = q_des(0);
+            msg.orientation.x = q_des(1);
+            msg.orientation.y = q_des(2);
+            msg.orientation.z = q_des(3);
+            msg.thrust = cmdBodyRate_(3);
+            _att_rate_pub.publish(msg);
+          }
+          else
+          {
+            // std::cout << "Send acc command to PX4 for tracking" << std::endl;
+            // send acceleration command
+            // mavros_msgs::PositionTarget pos_sp;
+            // pos_sp.position.x = 0.0;
+            // pos_sp.position.y = 0.0;
+            // pos_sp.position.z = 0.0;
+            // pos_sp.velocity.x = 0.0;
+            // pos_sp.velocity.y = 0.0;
+            // pos_sp.velocity.z = 0.0;
+            // pos_sp.acceleration_or_force.x = a_des.x();
+            // pos_sp.acceleration_or_force.y = a_des.y();
+            // pos_sp.acceleration_or_force.z = a_des.z();
+            // pos_sp.yaw = cmd_yaw; // fixed yaw
+            // pos_sp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+            // pos_sp.type_mask = 2111; // 1+2+4+8+16+32+2048 i.e. only use acceleration setpoint
+            // Position_Setpoint_Pub.publish(pos_sp);
+
+
+            // send trajectory p,v,a to px4 (v and a are used as feed-forward)
+            // https://docs.px4.io/main/en/flight_stack/controller_diagrams.html#combined-position-and-velocity-controller-diagram
+            // https://docs.px4.io/main/en/flight_modes/offboard.html#copter-vtol
+            
+            mavros_msgs::PositionTarget pos_sp;
+            pos_sp.position.x = traj_sp_enu.position.x;
+            pos_sp.position.y = traj_sp_enu.position.y;
+            pos_sp.position.z = traj_sp_enu.position.z;
+            pos_sp.velocity.x = traj_sp_enu.velocity.x;
+            pos_sp.velocity.y = traj_sp_enu.velocity.y;
+            pos_sp.velocity.z = traj_sp_enu.velocity.z;
+            pos_sp.acceleration_or_force.x = traj_sp_enu.acceleration.x;
+            pos_sp.acceleration_or_force.y = traj_sp_enu.acceleration.y;
+            pos_sp.acceleration_or_force.z = traj_sp_enu.acceleration.z;
+            pos_sp.yaw = cmd_yaw; // fixed yaw
+            pos_sp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+            pos_sp.type_mask = 2048; // use p,v,a and ignore yaw_rate
+            Position_Setpoint_Pub.publish(pos_sp);
+          }
+
           // std::cout << msg.thrust << std::endl;
           break;
         }
