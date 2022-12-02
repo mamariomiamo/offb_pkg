@@ -51,6 +51,7 @@ OffbNode::OffbNode(ros::NodeHandle &nodeHandle) : _nh(nodeHandle)
   std::cout << "WP_Location: " << trajectory_location << std::endl;
 
   _nh.param<bool>("arm_safety_check", arm_safety_check, true);
+  _nh.param<bool>("astar_waypt_test", astar_waypt_test_, false);
 
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
@@ -76,12 +77,13 @@ OffbNode::OffbNode(ros::NodeHandle &nodeHandle) : _nh(nodeHandle)
   uav_vel_sub = _nh.subscribe<geometry_msgs::TwistStamped>(
       "/" + uav_id_ + "/mavros/local_position/velocity_local", 1, &OffbNode::vel_callback, this);
 
-  if (user_give_goal_)
+  if (user_give_goal_ || astar_waypt_test_)
   {
     // navGoal_sub = _nh.subscribe<geometry_msgs::PoseStamped>("/goal", 1, &OffbNode::navGoal_cb, this);
     navGoal_sub = _nh.subscribe<geometry_msgs::PoseStamped>("/" + uav_id_ + "/" + "navGoal_enu",
                                                             1, &OffbNode::navGoal_cb, this);
   }
+  
   else
   {
     ref_pose_sub = _nh.subscribe<geometry_msgs::PoseStamped>("/uav/ref_pose/nwu", 1, &OffbNode::refPoseCallBack, this);
@@ -195,7 +197,7 @@ void OffbNode::missionTimer(const ros::TimerEvent &)
     if (navGoal_init)
     {
 
-      if (user_give_goal_)
+      if (user_give_goal_ || astar_waypt_test_)
       {
         local_pos_pub.publish(navGoal_sp);
         break;

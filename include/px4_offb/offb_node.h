@@ -148,6 +148,7 @@ private:
     bool user_give_goal_;
     bool use_px4Ctrl;
     bool send_attitude_target_;
+    bool astar_waypt_test_;
 
     Eigen::Vector3d uav_local_vel_enu; // uav local velocity in ENU
     Eigen::Vector3d uav_local_pos_enu; // uav local position in ENU
