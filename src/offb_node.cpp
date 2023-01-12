@@ -207,16 +207,43 @@ void OffbNode::missionTimer(const ros::TimerEvent &)
       {
         if (use_px4Ctrl)
         {
-          waypoint_sp.pose.position.x = traj_sp_enu.position.x; // take this as position setpoint in local enu frame
-          waypoint_sp.pose.position.y = traj_sp_enu.position.y;
-          waypoint_sp.pose.position.z = traj_sp_enu.position.z;
-          tf2::Quaternion traj_quat;
-          traj_quat.setRPY(0, 0, traj_sp_enu.heading);
-          waypoint_sp.pose.orientation.w = traj_quat.getW();
-          waypoint_sp.pose.orientation.x = traj_quat.getX();
-          waypoint_sp.pose.orientation.y = traj_quat.getY();
-          waypoint_sp.pose.orientation.z = traj_quat.getZ();
-          local_pos_pub.publish(waypoint_sp);
+          // pos_sp.type_mask = 3576; // Ignore Velocity, Acceleration and Yaw
+          // pos_sp.type_mask = 2552; // Ignore Velocity, Acceleration
+          // _cmd.type_mask = 2496; // Ignore Acceleration
+          // pos_sp.type_mask = 3520; // Ignore Acceleration and Yaw
+          // pos_sp.type_mask = 3072; // Ignore Yaw
+          // send trajectory p,v,a to px4 (v and a are used as feed-forward)
+          // https://docs.px4.io/main/en/flight_stack/controller_diagrams.html#combined-position-and-velocity-controller-diagram
+          // https://docs.px4.io/main/en/flight_modes/offboard.html#copter-vtol
+
+          
+
+          // waypoint_sp.pose.position.x = traj_sp_enu.position.x; // take this as position setpoint in local enu frame
+          // waypoint_sp.pose.position.y = traj_sp_enu.position.y;
+          // waypoint_sp.pose.position.z = traj_sp_enu.position.z;
+          // tf2::Quaternion traj_quat;
+          // traj_quat.setRPY(0, 0, traj_sp_enu.heading);
+          // waypoint_sp.pose.orientation.w = traj_quat.getW();
+          // waypoint_sp.pose.orientation.x = traj_quat.getX();
+          // waypoint_sp.pose.orientation.y = traj_quat.getY();
+          // waypoint_sp.pose.orientation.z = traj_quat.getZ();
+          // local_pos_pub.publish(waypoint_sp);
+
+          mavros_msgs::PositionTarget pos_sp;
+          pos_sp.header.stamp = ros::Time::now();
+          pos_sp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+          pos_sp.position.x = traj_sp_enu.position.x;
+          pos_sp.position.y = traj_sp_enu.position.y;
+          pos_sp.position.z = traj_sp_enu.position.z;
+          pos_sp.velocity.x = traj_sp_enu.velocity.x;
+          pos_sp.velocity.y = traj_sp_enu.velocity.y;
+          pos_sp.velocity.z = traj_sp_enu.velocity.z;
+          pos_sp.acceleration_or_force.x = traj_sp_enu.acceleration.x;
+          pos_sp.acceleration_or_force.y = traj_sp_enu.acceleration.y;
+          pos_sp.acceleration_or_force.z = traj_sp_enu.acceleration.z;
+          pos_sp.yaw = traj_sp_enu.heading;
+          pos_sp.type_mask = 2048; // use p,v,a and ignore yaw_rate
+          Position_Setpoint_Pub.publish(pos_sp);
           break;
         }
 
