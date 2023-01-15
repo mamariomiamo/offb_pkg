@@ -460,7 +460,7 @@ bool OffbNode::set_offboard()
   init_sp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
 
   // send a few setpoints before starting
-  for (int i = 100; ros::ok() && i > 0; --i)
+  for (int i = 10; ros::ok() && i > 0; --i)
   {
     Position_Setpoint_Pub.publish(init_sp);
     ros::spinOnce();
@@ -489,7 +489,7 @@ bool OffbNode::set_offboard()
     }
     else
     {
-      if (!uav_current_state.armed && (ros::Time::now() - last_request > ros::Duration(5.0)))
+      if (!uav_current_state.armed && (ros::Time::now() - last_request > ros::Duration(1.0)))
       {
         ROS_INFO("Try Arming");
         if (arming_client.call(arm_cmd_) && arm_cmd_.response.success)
