@@ -149,8 +149,24 @@ add_executable(${PROJECT_NAME}_node
   src/offb_node.cpp 
   src/px4_tf2.cpp)
 
+add_executable(downwash
+  src/downwash.cpp 
+)
+
+add_executable(px4_tf2_standalone
+  src/main_tf2.cpp
+  src/px4_tf2.cpp)
+
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
    offboard_controller_lib
  )
+
+ target_link_libraries(downwash
+ ${catkin_LIBRARIES}
+)
+
+target_link_libraries(px4_tf2_standalone
+${catkin_LIBRARIES}
+)
