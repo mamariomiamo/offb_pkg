@@ -11,8 +11,10 @@
 #include <mavros_msgs/State.h>
 #include <string>
 #include <iostream>
+#include <vector>
 
 mavros_msgs::State current_state;
+
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
 {
     current_state = *msg;
@@ -21,9 +23,17 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "downwash");
-    ros::NodeHandle nh;
-    std::string m_uav_id_ = "drone0";
-    // nh.param<std::string>("uav_id", m_uav_id_, "drone0");
+    ros::NodeHandle nh("~");
+    std::string m_uav_id_ = "drone";
+
+    std::vector<double> take_off_position;
+    std::vector<double> waypoint_1;
+    std::vector<double> land_position;
+
+    nh.param<std::string>("uav_id", m_uav_id_, "drone0");
+    nh.getParam("take_off_position", take_off_position);
+    nh.getParam("waypoint_1", waypoint_1);
+    nh.getParam("land_position", land_position);
 
     std::cout << "/" + m_uav_id_ + "mavros/state" << std::endl;
 
@@ -38,20 +48,18 @@ int main(int argc, char **argv)
     // wait for FCU connection
     while (ros::ok() && !current_state.connected)
     {
-        std::cout << "waiting for connection\n";
         ros::spinOnce();
         rate.sleep();
     }
 
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 0;
-    pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    pose.pose.position.x = take_off_position[0];
+    pose.pose.position.y = take_off_position[1];
+    pose.pose.position.z = take_off_position[2];
 
     // send a few setpoints before starting
     for (int i = 100; ros::ok() && i > 0; --i)
     {
-        std::cout << "downwash\n";
         local_pos_pub.publish(pose);
         ros::spinOnce();
         rate.sleep();
@@ -71,7 +79,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         if (current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0)))
+            (ros::Time::now() - last_request > ros::Duration(2.0)))
         {
             if (set_mode_client.call(offb_set_mode) &&
                 offb_set_mode.response.mode_sent)
@@ -83,7 +91,7 @@ int main(int argc, char **argv)
         else
         {
             if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0)))
+                (ros::Time::now() - last_request > ros::Duration(2.0)))
             {
                 if (arming_client.call(arm_cmd) &&
                     arm_cmd.response.success)
@@ -100,25 +108,31 @@ int main(int argc, char **argv)
             first_pub_time = ros::Time::now();
         }
 
-        if ((ros::Time::now() - first_pub_time).toSec() > 5)
+        double time_lapsed = (ros::Time::now() - first_pub_time).toSec();
+        std::cout << "Time lapsed: " << time_lapsed << std::endl;
+
+        if (50 < time_lapsed && time_lapsed < 100)
         {
-            pose.pose.position.x = 5;
-            pose.pose.position.y = 5;
-            pose.pose.position.z = 2;
+            pose.pose.position.x = waypoint_1[0];
+            pose.pose.position.y = waypoint_1[1];
+            pose.pose.position.z = waypoint_1[2];
+            // std::cout << "Position Setpoint: (5, 5, 2)\n";
         }
 
-        else if ((ros::Time::now() - first_pub_time).toSec() > 10)
+        else if (100 < time_lapsed && time_lapsed < 120)
         {
-            pose.pose.position.x = 3;
-            pose.pose.position.y = 3;
-            pose.pose.position.z = 2;
+            pose.pose.position.x = land_position[0];
+            pose.pose.position.y = land_position[1];
+            pose.pose.position.z = land_position[2];
+            // std::cout << "Position Setpoint: (0, 0, 2)\n";
         }
 
-        else if ((ros::Time::now() - first_pub_time).toSec() > 15)
+        else if (120 < time_lapsed)
         {
-            pose.pose.position.x = 0;
-            pose.pose.position.y = 0;
-            pose.pose.position.z = 2;
+            pose.pose.position.x = land_position[0];
+            pose.pose.position.y = land_position[1];
+            pose.pose.position.z = 0;
+            // std::cout << "Position Setpoint: (3, 3, 2)\n";
         }
 
         local_pos_pub.publish(pose);

@@ -28,16 +28,16 @@
         <arg name="ID" value="0" />
         <arg name="fcu_url" default="udp://:14540@localhost:14580" />
         <arg name="xid" value="drone0" />
-        <arg name="x" value="0" />
-        <arg name="y" value="0" />
+        <arg name="x" value="1.5" />
+        <arg name="y" value="1.5" />
         <arg name="z" value="0" />
 
         <!-- PX4 SITL and vehicle spawn -->
         <!-- enu frame -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0" />
-            <arg name="y" value="0" />
-            <arg name="z" value="0" />
+            <arg name="x" value="$(arg x)"/>
+            <arg name="y" value="$(arg y)"/>
+            <arg name="z" value="$(arg z)"/>
             <arg name="R" value="0" />
             <arg name="P" value="0" />
             <arg name="Y" value="0" />
@@ -68,6 +68,11 @@
 
         <node pkg="px4_offb" type="downwash" name="downwash" output="screen">
             <param name="uav_id" value="$(arg xid)" />
+
+            <!-- position in ENU, check in VICON -->
+            <rosparam param="take_off_position">[0.0, 0.0, 2.37]</rosparam>
+            <rosparam param="waypoint_1">[1.0, 1.0, 2.37]</rosparam>
+            <rosparam param="land_position">[2.0, 2.0, 2.37]</rosparam>
         </node>
 
     </group>
