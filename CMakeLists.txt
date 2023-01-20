@@ -157,6 +157,9 @@ add_executable(px4_tf2_standalone
   src/main_tf2.cpp
   src/px4_tf2.cpp)
 
+add_executable(traj_gen
+  src/traj_gen.cpp)
+
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
@@ -168,5 +171,9 @@ add_executable(px4_tf2_standalone
 )
 
 target_link_libraries(px4_tf2_standalone
+${catkin_LIBRARIES}
+)
+
+target_link_libraries(traj_gen
 ${catkin_LIBRARIES}
 )

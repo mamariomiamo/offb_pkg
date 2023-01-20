@@ -168,9 +168,9 @@ void OffbNode::missionTimer(const ros::TimerEvent &)
   {
     if (!takeoff_announced)
     {
-      ROS_INFO("Mission timer Doing takeoff!");
+      // ROS_INFO("Mission timer Doing takeoff!");
 
-      std::cout << "Current Altitude is: " << uav_pose.pose.position.z << std::endl;
+      // std::cout << "Current Altitude is: " << uav_pose.pose.position.z << std::endl;
 
       if (abs(uav_pose.pose.position.z - takeoff_height) < 0.01)
       {

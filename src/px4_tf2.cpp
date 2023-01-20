@@ -15,7 +15,7 @@ namespace px4_tf2
             "/" + m_uav_id_ + "/mavros/local_position/pose", 1, &px4_tf2::poseCallback, this);
 
         navGoal_sub = nh.subscribe<geometry_msgs::PoseStamped>(
-            "/goal11", 1, &px4_tf2::navGoal_cb, this);
+            "/goal", 1, &px4_tf2::navGoal_cb, this);
 
         ref_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>(
             "/uav/ref_pose/nwu", 1, &px4_tf2::refPoseCallBack, this);

@@ -60,10 +60,21 @@
         <node pkg="px4_offb" type="px4_offb_node" name="offboard_node" output="screen">
             <param name="WP_Location" value="$(find px4_offb)/waypoints/waypoints.txt"/>
             <param name="arm_safety_check" value="false"/>
-            <param name="user_give_goal" value="true"/>
+            <param name="user_give_goal" value="false"/>
             <param name="uav_id" value="$(arg xid)"/>
             <param name="send_attitude_target" value="false"/>
             <param name="use_px4Ctrl" value="true"/>
+    
+        </node>
+
+        <!-- <include file="$(find trajectory_publisher)/launch/px4_offb_circle_trajectory.launch">
+            <arg name="speed" value="1.0"/>
+            <arg name="sampling_frequency" value="10000.0"/>
+            <arg name="radius" value="1.0"/>
+            <arg name="trajectory_pub_timer_auto_start" value="false"/>
+        </include> -->
+
+        <node pkg="px4_offb" type="traj_gen" name="traj_gen" output="screen">
     
         </node>
 
