@@ -112,6 +112,7 @@ private:
     ros::Subscriber uav_gps_home_sub;
     ros::Subscriber traj_sp_enu_sub;
     ros::Publisher _att_rate_pub;
+    ros::Subscriber poly_traj_sub;
 
     geometry_msgs::Point pos_init;
     geometry_msgs::PoseStamped navGoal_sp;

@@ -75,7 +75,8 @@
         </include> -->
 
         <node pkg="px4_offb" type="traj_gen" name="traj_gen" output="screen">
-    
+            <param name="nominal_velocity" value="3.0"/>
+            <param name="use_px4Ctrl" value="true"/>
         </node>
 
         <node pkg="tf2_ros" 

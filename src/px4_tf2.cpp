@@ -21,7 +21,7 @@ namespace px4_tf2
             "/uav/ref_pose/nwu", 1, &px4_tf2::refPoseCallBack, this);
 
         traj_nwu_sub = nh.subscribe<quadrotor_msgs::TrajectoryPoint>(
-            "/uav/trajectory_point/nwu", 1, &px4_tf2::trajSetpointCallBack, this);
+            "/" + m_uav_id_ + "/trajectory_point/nwu", 1, &px4_tf2::trajSetpointCallBack, this);
 
         global_nwu_pose_pub_ =
             nh_.advertise<geometry_msgs::PoseStamped>("/" + m_uav_id_ + "/" + "global_nwu", 10);
